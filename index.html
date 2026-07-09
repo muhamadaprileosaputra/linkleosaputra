@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINK LEO SAPUTRA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#fff;color:#0f172a;min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+
+        .toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;width:90%;max-width:380px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+        .toast{padding:14px 20px;border-radius:14px;color:#fff;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);transform:translateY(-20px);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1);pointer-events:auto;text-align:center;justify-content:center}
+        .toast.show{transform:translateY(0);opacity:1}
+        .toast.success{background:linear-gradient(135deg,#10b981,#059669)}
+        .toast.error{background:linear-gradient(135deg,#ef4444,#dc2626)}
+
+        .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.95);backdrop-filter:blur(16px);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s ease}
+        .loading-overlay.active{opacity:1;pointer-events:all}
+        .spinner{width:44px;height:44px;border:4px solid #dbeafe;border-top-color:#3b82f6;border-radius:50%;animation:spin .75s linear infinite}
+        .loading-label{margin-top:16px;font-size:14px;color:#64748b;font-weight:500}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f8fafc;position:relative}
+        .login-deco{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.35}
+        .login-deco.a{width:320px;height:320px;background:#93c5fd;top:-80px;right:-60px}
+        .login-deco.b{width:260px;height:260px;background:#bfdbfe;bottom:-60px;left:-60px}
+        .login-card{background:#fff;border:1px solid #e8ecf2;border-radius:28px;padding:44px 36px;width:100%;max-width:400px;position:relative;z-index:2;box-shadow:0 2px 40px rgba(0,0,0,.05);animation:cardUp .6s cubic-bezier(.16,1,.3,1)}
+        @keyframes cardUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+        .lc-logo{text-align:center;margin-bottom:32px}
+        .lc-icon{width:64px;height:64px;background:linear-gradient(135deg,#60a5fa,#2563eb);border-radius:18px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 6px 24px rgba(37,99,235,.25)}
+        .lc-icon i{font-size:26px;color:#fff}
+        .lc-logo h1{font-size:21px;font-weight:800;color:#0f172a;letter-spacing:-.02em}
+        .lc-logo p{font-size:13px;color:#94a3b8;margin-top:4px}
+        .field{margin-bottom:18px}
+        .field label{display:block;font-size:12.5px;font-weight:600;color:#475569;margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em}
+        .field-input{position:relative}
+        .field-input i.fi{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#b0bec5;font-size:14px;transition:color .25s;pointer-events:none}
+        .field-input input{width:100%;padding:13px 44px 13px 44px;border:2px solid #e8ecf2;border-radius:14px;font-size:14.5px;font-family:'Inter',sans-serif;color:#0f172a;background:#fafbfc;transition:all .25s ease;outline:none}
+        .field-input input::placeholder{color:#b0bec5}
+        .field-input input:focus{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 4px rgba(59,130,246,.08)}
+        .field-input input:focus~i.fi{color:#3b82f6}
+        .field-input input.locked{background:#f1f5f9;color:#475569;cursor:not-allowed;border-color:#e2e8f0;letter-spacing:.03em;font-weight:500}
+        .field-input input.locked~i.fi{color:#94a3b8}
+        .field-input .lock-badge{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px;pointer-events:none}
+        .field-input .lock-badge i{font-size:12px}
+        .btn-login{width:100%;padding:14px;background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .25s ease;margin-top:6px;box-shadow:0 4px 18px rgba(37,99,235,.25);display:flex;align-items:center;justify-content:center;gap:8px;height:50px}
+        .btn-login:hover{box-shadow:0 6px 28px rgba(37,99,235,.35);transform:translateY(-1px)}
+        .btn-login:active{transform:translateY(0)}
+        .btn-login .spin-sm{display:none;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+        .btn-login.loading .btn-text{display:none}
+        .btn-login.loading .spin-sm{display:block}
+        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+        .shake{animation:shake .35s ease}
+
+        .dashboard{display:none;min-height:100vh;background:#f8fafc}
+        .dashboard.active{display:flex;flex-direction:column;animation:fadeUp .45s ease}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+        .d-header{background:#fff;border-bottom:1px solid #edf0f4;padding:0 28px;position:sticky;top:0;z-index:100}
+        .d-header-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+        .d-brand{display:flex;align-items:center;gap:10px}
+        .d-brand-icon{width:36px;height:36px;background:linear-gradient(135deg,#60a5fa,#2563eb);border-radius:11px;display:flex;align-items:center;justify-content:center}
+        .d-brand-icon i{color:#fff;font-size:14px}
+        .d-brand span{font-size:15px;font-weight:800;color:#0f172a;letter-spacing:-.01em}
+        .d-right{display:flex;align-items:center;gap:10px}
+        .d-user{display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;background:#f1f5f9;border-radius:50px;font-size:12.5px;font-weight:600;color:#334155}
+        .d-avatar{width:26px;height:26px;background:linear-gradient(135deg,#60a5fa,#2563eb);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+        .btn-out{padding:7px 14px;background:none;border:1.5px solid #e8ecf2;border-radius:10px;font-size:12.5px;font-weight:600;color:#64748b;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
+        .btn-out:hover{border-color:#fca5a5;color:#ef4444;background:#fef2f2}
+
+        .d-body{max-width:960px;margin:0 auto;padding:36px 28px 60px;width:100%}
+        .d-welcome{margin-bottom:28px}
+        .d-welcome h2{font-size:24px;font-weight:800;color:#0f172a;letter-spacing:-.02em}
+        .d-welcome p{font-size:14px;color:#94a3b8;margin-top:4px}
+
+        .d-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+
+        .lk-card{background:#fff;border:1px solid #edf0f4;border-radius:20px;padding:28px 24px;cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+        .lk-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3.5px;background:linear-gradient(90deg,#60a5fa,#2563eb);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.16,1,.3,1)}
+        .lk-card:hover::after{transform:scaleX(1)}
+        .lk-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(59,130,246,.1);border-color:#bfdbfe}
+        .lk-card:active{transform:translateY(-1px)}
+        .lk-card .c-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;transition:transform .25s}
+        .lk-card:hover .c-icon{transform:scale(1.06)}
+        .c-icon.blue{background:#eff6ff;color:#2563eb}
+        .c-icon.green{background:#ecfdf5;color:#059669}
+        .c-icon.purple{background:#f5f3ff;color:#7c3aed}
+        .c-icon.orange{background:#fff7ed;color:#ea580c}
+        .c-icon.pink{background:#fdf2f8;color:#db2777}
+        .c-icon.cyan{background:#ecfeff;color:#0891b2}
+        .lk-card h3{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:5px}
+        .lk-card p{font-size:12.5px;color:#94a3b8;line-height:1.5}
+        .c-arrow{position:absolute;top:24px;right:22px;width:30px;height:30px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;transition:all .25s}
+        .lk-card:hover .c-arrow{background:#2563eb;color:#fff}
+        .c-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#d97706;background:#fffbeb;padding:3px 8px;border-radius:6px;margin-top:12px}
+        .c-badge i{font-size:9px}
+
+        .lk-card{opacity:0;transform:translateY(16px);animation:cardIn .45s cubic-bezier(.16,1,.3,1) forwards}
+        .lk-card:nth-child(1){animation-delay:.04s}
+        .lk-card:nth-child(2){animation-delay:.08s}
+        .lk-card:nth-child(3){animation-delay:.12s}
+        .lk-card:nth-child(4){animation-delay:.16s}
+        .lk-card:nth-child(5){animation-delay:.2s}
+        .lk-card:nth-child(6){animation-delay:.24s}
+        @keyframes cardIn{to{opacity:1;transform:translateY(0)}}
+
+        .d-footer{text-align:center;padding:28px;font-size:12.5px;color:#b0bec5;border-top:1px solid #edf0f4;margin-top:auto;background:#fff}
+        .d-footer strong{color:#3b82f6;font-weight:700}
+
+        .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(6px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+        .modal-bg.open{opacity:1;pointer-events:all}
+        .modal-card{background:#fff;border-radius:24px;padding:32px 28px;width:100%;max-width:380px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.12);transform:scale(.92) translateY(16px);transition:transform .35s cubic-bezier(.16,1,.3,1)}
+        .modal-bg.open .modal-card{transform:scale(1) translateY(0)}
+        .m-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:13px;transition:all .2s}
+        .m-close:hover{background:#e2e8f0;color:#334155}
+        .m-icon{width:52px;height:52px;background:linear-gradient(135deg,#60a5fa,#2563eb);border-radius:15px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:0 5px 20px rgba(37,99,235,.25)}
+        .m-icon i{font-size:20px;color:#fff}
+        .modal-card h3{font-size:18px;font-weight:700;color:#0f172a;margin-bottom:4px}
+        .modal-card .m-sub{font-size:13px;color:#94a3b8;margin-bottom:22px}
+        .modal-card .m-sub b{color:#2563eb}
+        .m-err{font-size:12px;color:#ef4444;margin-top:-10px;margin-bottom:14px;display:none;align-items:center;gap:5px;font-weight:500}
+        .m-err.show{display:flex}
+        .m-input{position:relative;margin-bottom:18px}
+        .m-input i.mi{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#b0bec5;font-size:13px;transition:color .25s;pointer-events:none}
+        .m-input input{width:100%;padding:13px 44px 13px 42px;border:2px solid #e8ecf2;border-radius:14px;font-size:14.5px;font-family:'Inter',sans-serif;color:#0f172a;background:#fafbfc;outline:none;transition:all .25s}
+        .m-input input::placeholder{color:#b0bec5}
+        .m-input input:focus{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 4px rgba(59,130,246,.08)}
+        .m-input input:focus~i.mi{color:#3b82f6}
+        .m-input .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#b0bec5;cursor:pointer;padding:4px;font-size:13px;transition:color .2s}
+        .m-input .eye-btn:hover{color:#3b82f6}
+        .m-btns{display:flex;gap:10px}
+        .m-cancel{flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+        .m-cancel:hover{background:#e2e8f0;color:#334155}
+        .m-submit{flex:1.4;padding:13px;background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;border:none;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .25s;box-shadow:0 4px 16px rgba(37,99,235,.25);display:flex;align-items:center;justify-content:center;gap:6px}
+        .m-submit:hover{box-shadow:0 6px 24px rgba(37,99,235,.35);transform:translateY(-1px)}
+
+        @media(max-width:768px){
+            .login-card{padding:32px 24px;border-radius:22px;max-width:360px}
+            .lc-logo h1{font-size:19px}
+            .d-header{padding:0 16px}
+            .d-header-inner{height:56px}
+            .d-brand span{font-size:14px}
+            .d-user{display:none}
+            .btn-out span.out-text{display:none}
+            .btn-out{padding:7px 10px}
+            .d-body{padding:24px 16px 40px}
+            .d-welcome h2{font-size:20px}
+            .d-welcome p{font-size:13px}
+            .d-grid{grid-template-columns:1fr;gap:12px}
+            .lk-card{border-radius:16px;padding:20px 18px;display:flex;align-items:center;gap:14px}
+            .lk-card .c-icon{width:44px;height:44px;min-width:44px;border-radius:12px;font-size:18px;margin-bottom:0}
+            .lk-card .c-info{flex:1;min-width:0}
+            .lk-card h3{font-size:14px;margin-bottom:2px}
+            .lk-card p{font-size:11.5px;-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+            .lk-card .c-arrow{position:static;width:28px;height:28px;min-width:28px;font-size:11px}
+            .lk-card .c-badge{display:none}
+            .lk-card::after{height:3px}
+            .lk-card:hover{transform:translateX(4px)}
+            .modal-card{padding:26px 22px;border-radius:20px;max-width:340px}
+        }
+        @media(min-width:769px){
+            .lk-card .c-info{display:contents}
+        }
+        @media(max-width:360px){
+            .login-card{padding:28px 20px}
+            .field-input input{padding:12px 40px 12px 40px;font-size:14px}
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-label" id="loadingLabel">Mengalihkan...</div>
+</div>
+
+<!-- ===== LOGIN ===== -->
+<div class="login-page" id="loginPage">
+    <div class="login-deco a"></div>
+    <div class="login-deco b"></div>
+    <div class="login-card">
+        <div class="lc-logo">
+            <div class="lc-icon"><i class="fas fa-link"></i></div>
+            <h1>LINK LEO SAPUTRA</h1>
+            <p>Klik tombol masuk untuk melanjutkan</p>
+        </div>
+        <form id="loginForm" onsubmit="return doLogin(event)">
+            <div class="field">
+                <label>Username</label>
+                <div class="field-input">
+                    <input type="text" value="LEOSAPUTRA" readonly tabindex="-1" class="locked">
+                    <i class="fas fa-user fi"></i>
+                    <div class="lock-badge"><i class="fas fa-lock"></i> Terkunci</div>
+                </div>
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <div class="field-input">
+                    <input type="text" value="LEOSAPUTRA" readonly tabindex="-1" class="locked">
+                    <i class="fas fa-lock fi"></i>
+                    <div class="lock-badge"><i class="fas fa-lock"></i> Terkunci</div>
+                </div>
+            </div>
+            <button type="submit" class="btn-login" id="btnLogin">
+                <span class="btn-text">Masuk</span>
+                <div class="spin-sm"></div>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard" id="dashPage">
+    <header class="d-header">
+        <div class="d-header-inner">
+            <div class="d-brand">
+                <div class="d-brand-icon"><i class="fas fa-link"></i></div>
+                <span>LEO SAPUTRA</span>
+            </div>
+            <div class="d-right">
+                <div class="d-user">
+                    <div class="d-avatar" id="dAvatar">L</div>
+                    <span id="dName">Leosaputra</span>
+                </div>
+                <button class="btn-out" onclick="doLogout()">
+                    <i class="fas fa-right-from-bracket"></i>
+                    <span class="out-text">Keluar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="d-body">
+        <div class="d-welcome">
+            <h2>Selamat Datang! 👋</h2>
+            <p>Pilih link yang ingin kamu akses</p>
+        </div>
+        <div class="d-grid" id="linkGrid"></div>
+    </main>
+
+    <footer class="d-footer">
+        &copy; 2025 <strong>LINK LEO SAPUTRA</strong> &mdash; All rights reserved.
+    </footer>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal-bg" id="modalBg">
+    <div class="modal-card">
+        <button class="m-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+        <div class="m-icon"><i class="fas fa-lock"></i></div>
+        <h3>Password Diperlukan</h3>
+        <p class="m-sub">Masukkan password untuk <b id="mLinkName">link</b></p>
+        <div class="m-err" id="mErr"><i class="fas fa-circle-exclamation"></i><span>Password Salah</span></div>
+        <div class="m-input">
+            <input type="password" id="mPassInput" placeholder="Masukkan password" autocomplete="off">
+            <i class="fas fa-key mi"></i>
+            <button type="button" class="eye-btn" onclick="toggleEye('mPassInput',this)"><i class="fas fa-eye"></i></button>
+        </div>
+        <div class="m-btns">
+            <button class="m-cancel" onclick="closeModal()">Batal</button>
+            <button class="m-submit" onclick="submitModal()"><i class="fas fa-unlock"></i> Buka Link</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const CREDS = { username: 'LEOSAPUTRA', password: 'LEOSAPUTRA' };
+
+const LINKS = [
+    {
+        id: 'spike',
+        title: 'THE SPIKE MOD',
+        desc: 'Download The Spike Mod by VtaSpike Modz VIP versi terbaru',
+        icon: 'fas fa-volleyball',
+        color: 'blue',
+        password: 'LEO3071',
+        url: 'https://www.mediafire.com/file/tfdh3fv976n3epo/The_Spike_Mod_by_VtaSpike_Modz_VIP.apk/file'
+    }
+];
+
+let activeLinkId = null;
+
+function toast(msg, type) {
+    const w = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    const ic = type === 'success' ? 'fa-circle-check' : 'fa-circle-xmark';
+    t.innerHTML = '<i class="fas ' + ic + '"></i><span>' + msg + '</span>';
+    w.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
+}
+
+function toggleEye(id, btn) {
+    const inp = document.getElementById(id);
+    const ico = btn.querySelector('i');
+    if (inp.type === 'password') { inp.type = 'text'; ico.className = 'fas fa-eye-slash'; }
+    else { inp.type = 'password'; ico.className = 'fas fa-eye'; }
+}
+
+function doLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    btn.classList.add('loading');
+    setTimeout(() => {
+        btn.classList.remove('loading');
+        toast('Login Berhasil', 'success');
+        setTimeout(() => {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashPage').classList.add('active');
+            document.getElementById('dName').textContent = 'Leosaputra';
+            document.getElementById('dAvatar').textContent = 'L';
+            buildCards();
+        }, 500);
+    }, 1000);
+    return false;
+}
+
+function doLogout() {
+    document.getElementById('dashPage').classList.remove('active');
+    document.getElementById('loginPage').style.display = 'flex';
+    toast('Berhasil keluar', 'success');
+}
+
+function buildCards() {
+    const grid = document.getElementById('linkGrid');
+    grid.innerHTML = '';
+    LINKS.forEach(lk => {
+        const card = document.createElement('div');
+        card.className = 'lk-card';
+        card.onclick = () => openModal(lk.id);
+        card.innerHTML =
+            '<div class="c-icon ' + lk.color + '"><i class="' + lk.icon + '"></i></div>' +
+            '<div class="c-info">' +
+                '<h3>' + lk.title + '</h3>' +
+                '<p>' + lk.desc + '</p>' +
+                '<div class="c-badge"><i class="fas fa-lock"></i> Proteksi Password</div>' +
+            '</div>' +
+            '<div class="c-arrow"><i class="fas fa-arrow-right"></i></div>';
+        grid.appendChild(card);
+    });
+}
+
+function openModal(id) {
+    activeLinkId = id;
+    const lk = LINKS.find(x => x.id === id);
+    if (!lk) return;
+    document.getElementById('mLinkName').textContent = lk.title;
+    document.getElementById('mPassInput').value = '';
+    document.getElementById('mErr').classList.remove('show');
+    document.getElementById('modalBg').classList.add('open');
+    setTimeout(() => document.getElementById('mPassInput').focus(), 280);
+}
+
+function closeModal() {
+    document.getElementById('modalBg').classList.remove('open');
+    activeLinkId = null;
+}
+
+function submitModal() {
+    const inp = document.getElementById('mPassInput');
+    const val = inp.value;
+    const lk = LINKS.find(x => x.id === activeLinkId);
+    if (!lk) return;
+
+    if (val === lk.password) {
+        closeModal();
+        toast('Berhasil, Mengalihkan...', 'success');
+        setTimeout(() => {
+            document.getElementById('loadingLabel').textContent = 'Mengalihkan ke ' + lk.title + '...';
+            document.getElementById('loadingOverlay').classList.add('active');
+            setTimeout(() => { window.location.href = lk.url; }, 1800);
+        }, 500);
+    } else {
+        document.getElementById('mErr').classList.add('show');
+        inp.classList.add('shake');
+        inp.value = '';
+        setTimeout(() => inp.classList.remove('shake'), 400);
+        inp.focus();
+    }
+}
+
+document.getElementById('mPassInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); submitModal(); }
+});
+document.getElementById('modalBg').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
